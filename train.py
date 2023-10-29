@@ -1,5 +1,4 @@
 import torch
-import torch.nn as nn
 import argparse
 from data.dataUtils import DataUtils
 from model.ImageEncoderModel import ImageEncoderModel
@@ -72,7 +71,6 @@ if args.train:
 
 
     model = ImageEncoderModel(image_size=SIZE, latent_dim=latent_dim)
-    loss = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters())
     train_dataset = DataLoader(dataset=DataUtils.get_train_dataset(SIZE), batch_size=batch_size)
     val_dataset = DataLoader(dataset=DataUtils.get_validate_dataset(SIZE), batch_size=batch_size*50)
