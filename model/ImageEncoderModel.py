@@ -4,6 +4,10 @@ import torch.nn as nn
 class ImageEncoderModel(nn.Module):
 
   def __init__(self, image_size, latent_dim):
+      """
+      :param image_size: size of input image (W == H)
+      :param latent_dim: number of channels of input image
+      """
       super(ImageEncoderModel, self).__init__()
 
       self.image_size = image_size
@@ -19,6 +23,10 @@ class ImageEncoderModel(nn.Module):
       self.unflatten = nn.Unflatten(1, torch.Size([1, self.image_size, self.image_size]))
 
   def forward(self, x):
+      """
+      :param x: input image data
+      :return: model output
+      """
       x = self.flatten(x)
       x = self.ln1(x)
       x = self.relu1(x)
