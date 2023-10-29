@@ -1,17 +1,15 @@
 import torch
 import argparse
 from data.dataUtils import DataUtils
-from model.ImageEncoderModel import ImageEncoderModel
+from model.ImageDenoisingModel import ImageDenoisingModel
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 from utils.utils import Utils
 import warnings
 
-
 warnings.filterwarnings('ignore')
 warnings.simplefilter('ignore')
 print("pytorch version: ", torch.__version__)
-
 
 # start of argument parser
 parser = argparse.ArgumentParser(description="AutoEncoder Model for image reconstruction")
@@ -35,7 +33,7 @@ if cuda:
     torch.cuda.manual_seed(args.seed)
 
 
-def train_model(model, train_loader, validation_loader, optimizer, image_size, n_epochs=5):
+def train_model(model, train_loader, validation_loader, optimizer, image_size, n_epochs=5, noise_factor=0.2):
     # global variable
     N_test = len(DataUtils.get_validate_dataset(image_size))
     print(" Number of validate images: ", N_test)
@@ -47,16 +45,19 @@ def train_model(model, train_loader, validation_loader, optimizer, image_size, n
         print(" starting epoch number {}/{} ....".format(epoch, n_epochs))
 
         for x, label in train_loader:
-            # call train() on model which extents nn.module
+            # create noise data pair for the train data
+            data = x + torch.randn_like(x) * noise_factor
+            data = torch.clip(data, min=0.0, max=1.0)
             if cuda:
-                x, label = x.cuda(), label.cuda()
+                x, data = x.cuda(), data.cuda()
                 model = model.cuda()
 
+            # call train() on model which extents nn.module
             model.train()
             # reset the weights derivative values
             optimizer.zero_grad()
             # predict the output
-            pred = model(x)
+            pred = model(data)
             # calculate Mean Squared loss
             loss = criterion(pred, x)
             # Calculate derivative of loss w.r.t weights
@@ -70,25 +71,25 @@ def train_model(model, train_loader, validation_loader, optimizer, image_size, n
 
 
 if args.train:
-
     latent_dim = 64
     SIZE = 28
     batch_size = 100
     epochs = 10
     channels = 1
+    noise_factor = 0.2
 
-
-    model = ImageEncoderModel(image_size=SIZE, latent_dim=latent_dim)
+    model = ImageDenoisingModel(image_size=SIZE,channels=channels)
     optimizer = torch.optim.Adam(model.parameters())
     train_dataset = DataLoader(dataset=DataUtils.get_train_dataset(SIZE), batch_size=batch_size)
-    val_dataset = DataLoader(dataset=DataUtils.get_validate_dataset(SIZE), batch_size=batch_size*50)
-    Utils.showData(DataUtils.get_train_dataset(SIZE)[3], SIZE)
+    val_dataset = DataLoader(dataset=DataUtils.get_validate_dataset(SIZE), batch_size=batch_size * 50)
 
+    Utils.showData(DataUtils.get_train_dataset(SIZE)[3], SIZE)
+    Utils.showNoisyData(DataUtils.get_train_dataset(SIZE)[3], image_size=SIZE, noise_factor=noise_factor)
     Utils.saveModelSummary(model, channels, SIZE)
 
     print("Before Training starts: ")
     trained_model, LOSS = train_model(model=model, train_loader=train_dataset, validation_loader=val_dataset,
-                       optimizer=optimizer, image_size=SIZE)
+                       optimizer=optimizer, image_size=SIZE, noise_factor=noise_factor)
     print("After Training ends: ")
     # Plot out the Loss and iteration diagram
     plt.plot(LOSS)
@@ -96,10 +97,11 @@ if args.train:
     plt.ylabel("Cost/total loss ")
     plt.show()
 
-    # predicting on the new data
+    # predict on the new data
     validate_data = DataUtils.get_validate_dataset(SIZE)
     Utils.showData(validate_data[5], SIZE)
+    data_point = Utils.showNoisyData(validate_data[5], SIZE, noise_factor=noise_factor)
 
     trained_model.eval()
-    output = trained_model(validate_data[5][0])
+    output = trained_model(data_point)
     Utils.showDataPredicted(output.detach(), SIZE)
