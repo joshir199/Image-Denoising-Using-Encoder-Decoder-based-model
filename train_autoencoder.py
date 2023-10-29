@@ -5,6 +5,12 @@ from model.ImageEncoderModel import ImageEncoderModel
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 from utils.utils import Utils
+import warnings
+
+
+warnings.filterwarnings('ignore')
+warnings.simplefilter('ignore')
+print("pytorch version: ", torch.__version__)
 
 
 # start of argument parser
