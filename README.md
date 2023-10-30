@@ -35,5 +35,39 @@ After training the model, it can be used to reconstruct the input image like bel
 -----------------> Image reconstructed using model
 
 
-Use Cases:  This Image Reconstruction image can be used to compress the image, detect anamoly in the image or any other data by comparing the reconstructed result.
+*******************************************************************************
 
+# Image Denoising
+
+The Encoder-Decoder based model will be used to capture the structural and local features of the image and construct image without noise to give denoised image.
+The model is trained on the standard Fashion MNIST dataset with image size of 28x28 and one channel. The normal distributed noise with noise_factor of 0.2 is added to each input image and model will try to learn to construct the image without noise.
+
+![](https://github.com/joshir199/Image-Denoising-Using-Encoder-Decoder-based-model/blob/main/output/image_with_noise.png)
+
+------------------------> Input Image with noise
+
+The model uses convolution and deconvolution layers to downsample and then upsample to construct output image with same dimension
+
+![](https://github.com/joshir199/Image-Denoising-Using-Encoder-Decoder-based-model/blob/main/output/image_denoising_model_summary.png)
+
+----------------------> Image Denoising model summary
+
+------------------------------
+For Training, following scipt can be run:
+```bash
+python train_denoising.py --learning_rate 0.001 --train
+```
+
+After training the model, it can be used to denoise the input image like below. 
+
+![](https://github.com/joshir199/Image-Denoising-Using-Encoder-Decoder-based-model/blob/main/output/image_denoising_loss_graph.png)
+
+----------------> Training loss graph
+
+
+![](https://github.com/joshir199/Image-Denoising-Using-Encoder-Decoder-based-model/blob/main/output/predicted%20denoised%20image.png)
+
+--------------->  Image denoised by model
+
+
+Use Cases:  
